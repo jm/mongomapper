@@ -14,17 +14,28 @@ require "action_controller/railtie"
 
 module MongoMapper
   class Railtie < Rails::Railtie
-    railtie_name :mongo_mapper
-
-    # This sets the database configuration from Configuration#database_configuration
-    # and then establishes the connection.
-    initializer "mongo_mapper.initialize_database" do |app|
-      conf = app.config.database_configuration[Rails.env]
-      conn = Mongo::Connection.new(conf['host'], conf['port'])
+    # Sets up the MongoDB connection from the configuration options in database.yml
+    # for the given environment 
+    def self.setup_from_env(app, env)
+      conf = app.config.database_configuration[env]
+      MongoMapper.connection = Mongo::Connection.new(conf['host'], conf['port'])
       if conf['username']
         conn.authenticate(conf['username'], conf['password']) || raise("Invalid MongoDB Authentication")
       end
       MongoMapper.database = conf['database']
+      conf
+    end
+
+    railtie_name :mongo_mapper
+
+    rake_tasks do
+      load "mongo_mapper/railtie/rails.rake"
+    end
+
+    # This sets the database configuration from Configuration#database_configuration
+    # and then establishes the connection.
+    initializer "mongo_mapper.initialize_database" do |app|
+      self.class.setup_from_env(app, Rails.env)
     end
   end
 end

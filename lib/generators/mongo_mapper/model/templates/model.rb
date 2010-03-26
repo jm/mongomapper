@@ -5,5 +5,5 @@ class <%= class_name %>
   include MongoMapper::Document  
   <% end %>
   
-  <%= model_attributes.map { |a| "key :#{a.name}, #{a.type.capitalize}" }.join("\n") %>
+  <%= model_attributes.map { |a| "key :#{a.name}, #{a.type.to_s.capitalize}" }.join("\n") %>
 end
